@@ -8,10 +8,16 @@ package mx.com.develop.generadordatosjson;
 import java.io.FileReader;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
+import java.io.FileNotFoundException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Random;
 
 
 /**
@@ -28,6 +34,8 @@ public class Principal {
     final static String[] DOMINIO={"gmail.com.mx","gmail.com","outlook.com","hotmail.com","yahoo.com"};
     final static String INICIO_INSERT="INSERT INTO user(user_account,user_adress,user_date_birth,user_email,user_last_name,user_name,user_password,user_phone,user_status) VALUES('";
     final static String FIN_INSERT="');";
+    static Random aleatorio = new Random();
+    
     
     public static void main(String args[]) {
         JsonParser parser = new JsonParser();
@@ -38,11 +46,15 @@ public class Principal {
         JsonArray datosMiddles = parser.parse(fr).getAsJsonArray();
         fr = new FileReader(ARCHIVO_PLACES);
         JsonArray datosPlaces = parser.parse(fr).getAsJsonArray();
+        
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         for (int i = 0; i < LIMITE_REGISTROS; i++) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.DAY_OF_YEAR, -365*20-aleatorio.nextInt(365*30));
+            String fechaNacimiento=sdf.format(calendar.getTime());
             String nombre=obtenValorAletorio(datosNombres);
             String middle=obtenValorAletorio(datosMiddles);
             String telefono=obtenTelefonoAleatorio();
-            String fechaNacimiento=obtenFechaNacimiento();
             String account=nombre.substring(0,2).toLowerCase()+middle.substring(0,2).toLowerCase()+fechaNacimiento.substring(2,4);
             String email=obtenerEmail(account);
             String direccion=obtenerDireccion(obtenValorAletorio(datosPlaces));
@@ -52,7 +64,7 @@ public class Principal {
             String cuerpoInsert=account+"','"+direccion+"','"+fechaNacimiento+"','"+email+"','"+middle+"','"+nombre+"','"+password+"','"+telefono+"','"+estatus;
             System.out.println(INICIO_INSERT+cuerpoInsert+FIN_INSERT);
         }
-        }catch(Exception e){
+        }catch(JsonIOException | JsonSyntaxException | FileNotFoundException | NoSuchAlgorithmException e){
             System.out.println(e);
         }
         
@@ -60,7 +72,7 @@ public class Principal {
     
     public static String obtenValorAletorio(JsonArray elementos){
         int arraySize=elementos.size();
-        int valorDado = (int) Math.floor(Math.random()*arraySize);
+        int valorDado = aleatorio.nextInt(arraySize);
         String nombre=elementos.get(valorDado).getAsString();
         /*for(JsonElement elemento: elementos){//imprime todo el contenido del JSON
              System.out.println(elemento.getAsString());
@@ -71,39 +83,13 @@ public class Principal {
     public static String obtenTelefonoAleatorio(){
         String numeroTelefonico="";
         for (int i = 0; i < CARACTERES_TELEFONO; i++) {
-            numeroTelefonico += (int) Math.floor(Math.random()*10);
+            numeroTelefonico += aleatorio.nextInt(10);
         }
         return numeroTelefonico;
     }
-    
-    public static String obtenFechaNacimiento(){
-        String fechaNacimiento="";
-        //Calcula anio
-        int finNacimiento = (int) Math.floor(Math.random()*99);
-        if(finNacimiento>=10){
-            fechaNacimiento += "19"+finNacimiento;
-        }else{
-            fechaNacimiento += "200"+finNacimiento;
-        }
-        //Calcula mes
-        int mesNacimiento = (int) Math.floor(Math.random()*11)+1;
-        if(mesNacimiento<10){
-            fechaNacimiento += "-0"+mesNacimiento;
-        }else{
-            fechaNacimiento += "-"+mesNacimiento;
-        }
-        //Calcula dia
-        int diaNacimiento = (int) Math.floor(Math.random()*27)+1;
-        if(diaNacimiento<10){
-            fechaNacimiento += "-0"+diaNacimiento;
-        }else{
-            fechaNacimiento += "-"+diaNacimiento;
-        }
-        return fechaNacimiento;
-    }
-    
+        
     public static String obtenerEmail(String cadena){
-        int valorDado = (int) Math.floor(Math.random()*DOMINIO.length);
+        int valorDado = aleatorio.nextInt(DOMINIO.length);
         String correo=cadena+"@"+DOMINIO[valorDado];
         /*for(JsonElement elemento: elementos){
              System.out.println(elemento.getAsString());
@@ -112,7 +98,7 @@ public class Principal {
     }
     
     public static String obtenerDireccion(String cadena){
-        int valorDado = (int)Math.floor(Math.random()*249)+1;
+        int valorDado = aleatorio.nextInt(249)+1;
         String direccion=cadena+" "+valorDado;
         return direccion;
     }
